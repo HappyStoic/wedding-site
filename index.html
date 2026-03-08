@@ -302,6 +302,7 @@
     <div class="hero-bg" style="background-image: url('pictures/pic6.png');"></div>
     <div class="hero-bg" style="background-image: url('pictures/pic7.png');"></div>
     <div class="hero-bg" style="background-image: url('pictures/pic8.png');"></div>
+    <div class="hero-bg" style="background-image: url('pictures/pic9.png');"></div>
     <p class="hero-topline">Zveme vás na</p>
 
     <div class="hero-card">
@@ -352,7 +353,30 @@
 
   <script>
     const backgrounds = document.querySelectorAll(".hero-bg");
+    const imagePaths = [
+      "pictures/pic3.png",
+      "pictures/pic4.png",
+      "pictures/pic5.png",
+      "pictures/pic6.png",
+      "pictures/pic7.png",
+      "pictures/pic8.png",
+      "pictures/pic9.png"
+    ];
     let activeIndex = 0;
+
+    const firstImage = imagePaths[0];
+    const remainingImages = imagePaths.slice(1);
+
+    for (let i = remainingImages.length - 1; i > 0; i -= 1) {
+      const randomIndex = Math.floor(Math.random() * (i + 1));
+      [remainingImages[i], remainingImages[randomIndex]] = [remainingImages[randomIndex], remainingImages[i]];
+    }
+
+    const orderedImages = [firstImage, ...remainingImages];
+
+    backgrounds.forEach((background, index) => {
+      background.style.backgroundImage = `url('${orderedImages[index]}')`;
+    });
 
     setInterval(() => {
       backgrounds[activeIndex].classList.remove("is-active");
