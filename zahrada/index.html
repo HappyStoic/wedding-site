@@ -1,0 +1,1008 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Plant Browser</title>
+  <style>
+    :root {
+      --bg: #f4efe5;
+      --panel: rgba(255, 251, 245, 0.9);
+      --panel-strong: #fffaf2;
+      --line: rgba(73, 94, 60, 0.16);
+      --text: #203122;
+      --muted: #617360;
+      --green: #476c45;
+      --green-strong: #2f4f2f;
+      --accent: #d98c44;
+      --accent-soft: rgba(217, 140, 68, 0.16);
+      --shadow: 0 22px 60px rgba(59, 51, 39, 0.12);
+      --radius-xl: 28px;
+      --radius-lg: 22px;
+      --radius-md: 16px;
+      --radius-sm: 12px;
+      --max-width: 1480px;
+      --font-display: Georgia, "Times New Roman", serif;
+      --font-ui: "Trebuchet MS", "Segoe UI", sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html, body {
+      margin: 0;
+      min-height: 100%;
+      background:
+        radial-gradient(circle at top left, rgba(255, 255, 255, 0.75), transparent 28%),
+        radial-gradient(circle at right 10% top 18%, rgba(217, 140, 68, 0.18), transparent 24%),
+        linear-gradient(180deg, #efe6d8 0%, #f5f0e8 42%, #ebf2e4 100%);
+      color: var(--text);
+      font-family: var(--font-ui);
+    }
+
+    body::before,
+    body::after {
+      content: "";
+      position: fixed;
+      inset: auto;
+      pointer-events: none;
+      z-index: 0;
+      border-radius: 999px;
+      filter: blur(12px);
+      opacity: 0.9;
+    }
+
+    body::before {
+      width: 360px;
+      height: 360px;
+      left: -140px;
+      top: 120px;
+      background: rgba(84, 133, 74, 0.14);
+    }
+
+    body::after {
+      width: 420px;
+      height: 420px;
+      right: -150px;
+      bottom: -120px;
+      background: rgba(217, 140, 68, 0.14);
+    }
+
+    .page {
+      position: relative;
+      z-index: 1;
+      width: min(calc(100vw - 48px), var(--max-width));
+      margin: 28px auto 36px;
+    }
+
+    .hero {
+      display: grid;
+      grid-template-columns: 1.15fr 0.85fr;
+      gap: 24px;
+      margin-bottom: 22px;
+    }
+
+    .hero-main,
+    .hero-side,
+    .toolbar,
+    .results-meta,
+    .empty-state,
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(12px);
+    }
+
+    .hero-main,
+    .hero-side {
+      border-radius: var(--radius-xl);
+      padding: 28px;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 9px 14px;
+      border-radius: 999px;
+      background: rgba(71, 108, 69, 0.1);
+      color: var(--green-strong);
+      font-size: 13px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      font-weight: 700;
+    }
+
+    h1 {
+      margin: 18px 0 12px;
+      font-family: var(--font-display);
+      font-size: 58px;
+      line-height: 0.96;
+      letter-spacing: -0.03em;
+      max-width: 12ch;
+    }
+
+    .hero-main p,
+    .hero-side p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.6;
+      font-size: 17px;
+    }
+
+    .hero-stats {
+      display: flex;
+      gap: 12px;
+      margin-top: 22px;
+      flex-wrap: wrap;
+    }
+
+    .stat {
+      padding: 14px 16px;
+      min-width: 136px;
+      border-radius: var(--radius-md);
+      background: rgba(255, 255, 255, 0.68);
+      border: 1px solid rgba(73, 94, 60, 0.12);
+    }
+
+    .stat strong {
+      display: block;
+      font-size: 24px;
+      margin-bottom: 4px;
+      font-family: var(--font-display);
+    }
+
+    .season-wheel {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      margin-top: 18px;
+    }
+
+    .season-chip {
+      padding: 14px 10px;
+      border-radius: var(--radius-md);
+      background: rgba(255, 255, 255, 0.68);
+      text-align: center;
+      border: 1px solid transparent;
+    }
+
+    .season-chip.active {
+      background: linear-gradient(135deg, rgba(71, 108, 69, 0.16), rgba(217, 140, 68, 0.16));
+      border-color: rgba(71, 108, 69, 0.18);
+    }
+
+    .season-chip strong {
+      display: block;
+      margin-bottom: 4px;
+      font-size: 16px;
+    }
+
+    .toolbar {
+      display: grid;
+      grid-template-columns: 1.2fr 0.7fr 0.7fr auto;
+      gap: 14px;
+      border-radius: var(--radius-lg);
+      padding: 16px;
+      margin-bottom: 18px;
+      align-items: end;
+    }
+
+    .control label {
+      display: block;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--muted);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: 9px;
+    }
+
+    .input,
+    .select,
+    .toggle {
+      width: 100%;
+      border: 1px solid rgba(73, 94, 60, 0.16);
+      border-radius: 14px;
+      background: rgba(255, 255, 255, 0.88);
+      padding: 15px 16px;
+      color: var(--text);
+      font: inherit;
+      outline: none;
+      transition: border-color 180ms ease, transform 180ms ease, box-shadow 180ms ease;
+    }
+
+    .input:focus,
+    .select:focus,
+    .toggle:focus {
+      border-color: rgba(71, 108, 69, 0.45);
+      box-shadow: 0 0 0 4px rgba(71, 108, 69, 0.1);
+    }
+
+    .toggle {
+      display: inline-flex;
+      justify-content: center;
+      gap: 10px;
+      cursor: pointer;
+      font-weight: 700;
+      background: rgba(255, 248, 240, 0.92);
+    }
+
+    .toggle.active {
+      background: linear-gradient(135deg, var(--green), #5d7d53);
+      color: #f7f4ef;
+      border-color: transparent;
+    }
+
+    .results-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-radius: var(--radius-lg);
+      padding: 14px 18px;
+      margin-bottom: 18px;
+      color: var(--muted);
+    }
+
+    .results-meta strong {
+      color: var(--text);
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    .card {
+      border-radius: var(--radius-lg);
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      min-height: 280px;
+      transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
+    }
+
+    .card:hover {
+      transform: translateY(-4px);
+      border-color: rgba(71, 108, 69, 0.24);
+      box-shadow: 0 24px 60px rgba(59, 51, 39, 0.16);
+    }
+
+    .card-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 14px;
+    }
+
+    .card h2 {
+      margin: 0 0 6px;
+      font-size: 23px;
+      line-height: 1.15;
+      font-family: var(--font-display);
+    }
+
+    .latin {
+      color: var(--muted);
+      font-style: italic;
+      font-size: 14px;
+    }
+
+    .difficulty {
+      flex: none;
+      min-width: 86px;
+      text-align: right;
+    }
+
+    .difficulty strong {
+      display: block;
+      font-size: 30px;
+      font-family: var(--font-display);
+      color: var(--green-strong);
+    }
+
+    .difficulty span {
+      color: var(--muted);
+      font-size: 12px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .pill-row,
+    .month-row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .pill,
+    .month {
+      display: inline-flex;
+      align-items: center;
+      padding: 7px 11px;
+      border-radius: 999px;
+      background: rgba(71, 108, 69, 0.08);
+      color: var(--green-strong);
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .month.current {
+      background: linear-gradient(135deg, rgba(217, 140, 68, 0.24), rgba(71, 108, 69, 0.16));
+      color: #5c3513;
+    }
+
+    .lead {
+      margin: 14px 0 0;
+      color: var(--muted);
+      line-height: 1.55;
+      font-size: 15px;
+    }
+
+    details.details {
+      margin-top: 16px;
+      border-top: 1px solid rgba(73, 94, 60, 0.12);
+      padding-top: 14px;
+    }
+
+    details > summary {
+      list-style: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      font-weight: 700;
+      color: var(--green-strong);
+    }
+
+    details > summary::-webkit-details-marker {
+      display: none;
+    }
+
+    .chevron {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      background: rgba(71, 108, 69, 0.08);
+      font-size: 18px;
+      transition: transform 180ms ease, background 180ms ease;
+    }
+
+    details[open] .chevron {
+      transform: rotate(180deg);
+      background: rgba(217, 140, 68, 0.18);
+    }
+
+    .detail-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-top: 14px;
+    }
+
+    .detail-block {
+      background: rgba(255, 255, 255, 0.66);
+      border: 1px solid rgba(73, 94, 60, 0.1);
+      border-radius: var(--radius-md);
+      padding: 14px;
+    }
+
+    .detail-block.full {
+      grid-column: 1 / -1;
+    }
+
+    .detail-block h3 {
+      margin: 0 0 8px;
+      font-size: 13px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .detail-block p,
+    .detail-block ul {
+      margin: 0;
+      color: var(--text);
+      line-height: 1.6;
+      font-size: 15px;
+    }
+
+    .detail-block ul {
+      padding-left: 18px;
+    }
+
+    .detail-block li + li {
+      margin-top: 8px;
+    }
+
+    .empty-state {
+      display: none;
+      border-radius: var(--radius-xl);
+      padding: 34px;
+      text-align: center;
+    }
+
+    .empty-state.visible {
+      display: block;
+    }
+
+    .empty-state h2 {
+      margin: 0 0 8px;
+      font-family: var(--font-display);
+      font-size: 36px;
+    }
+
+    @media (max-width: 1180px) {
+      .page {
+        width: min(calc(100vw - 32px), var(--max-width));
+      }
+
+      .hero {
+        grid-template-columns: 1fr;
+      }
+
+      .toolbar {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      h1 {
+        font-size: 48px;
+        max-width: 14ch;
+      }
+    }
+
+    @media (max-width: 760px) {
+      body::before,
+      body::after {
+        display: none;
+      }
+
+      .page {
+        width: min(calc(100vw - 20px), var(--max-width));
+        margin: 10px auto 20px;
+      }
+
+      .hero-main,
+      .hero-side,
+      .toolbar,
+      .results-meta,
+      .card,
+      .empty-state {
+        border-radius: 20px;
+      }
+
+      .hero-main,
+      .hero-side {
+        padding: 20px;
+      }
+
+      h1 {
+        font-size: 38px;
+        line-height: 1.02;
+        max-width: none;
+      }
+
+      .hero-main p,
+      .hero-side p {
+        font-size: 15px;
+      }
+
+      .hero-stats {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .stat {
+        min-width: 0;
+      }
+
+      .season-wheel {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .toolbar {
+        grid-template-columns: 1fr;
+        gap: 12px;
+        padding: 14px;
+      }
+
+      .results-meta {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 6px;
+      }
+
+      .grid {
+        grid-template-columns: 1fr;
+      }
+
+      .card {
+        min-height: 0;
+        padding: 16px;
+      }
+
+      .card-head {
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .difficulty {
+        min-width: 0;
+        text-align: left;
+      }
+
+      .difficulty strong {
+        font-size: 24px;
+      }
+
+      .detail-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .detail-block,
+      .detail-block.full {
+        grid-column: auto;
+      }
+    }
+
+    @media (max-width: 460px) {
+      .page {
+        width: min(calc(100vw - 14px), var(--max-width));
+      }
+
+      .eyebrow {
+        font-size: 11px;
+        padding: 8px 12px;
+      }
+
+      h1 {
+        font-size: 32px;
+      }
+
+      .hero-stats,
+      .season-wheel {
+        grid-template-columns: 1fr;
+      }
+
+      .input,
+      .select,
+      .toggle {
+        padding: 13px 14px;
+      }
+
+      .month-row,
+      .pill-row {
+        gap: 6px;
+      }
+
+      .month,
+      .pill {
+        font-size: 12px;
+      }
+
+      .detail-block {
+        padding: 12px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <section class="hero">
+      <div class="hero-main">
+        <div class="eyebrow">Plant Library</div>
+        <h1>Kytky, bylinky a balkonová úroda v jednom přehledu</h1>
+        <p>
+          Prohlížení nad tvým CSV: rychlé hledání podle názvu, řazení podle doporučené výsadby nebo náročnosti
+          a rozbalovací péče s detailním zaléváním, sázením, stanovištěm a dalšími poznámkami.
+        </p>
+        <div class="hero-stats" id="heroStats"></div>
+      </div>
+      <aside class="hero-side">
+        <div class="eyebrow">Kalendář</div>
+        <p>
+          Karty zvýrazňují aktuální měsíc a řazení <strong>Nejbližší výsadba</strong> počítá s tím, co je nejblíž
+          dnešku. Přepínač <strong>Jen teď vhodné</strong> nechá na ploše jen rostliny doporučené pro tento měsíc.
+        </p>
+        <div class="season-wheel" id="seasonWheel"></div>
+      </aside>
+    </section>
+
+    <section class="toolbar">
+      <div class="control">
+        <label for="search">Hledat podle názvu</label>
+        <input class="input" id="search" type="search" placeholder="Např. bazalka, borůvky, rajče…">
+      </div>
+      <div class="control">
+        <label for="sort">Řazení</label>
+        <select class="select" id="sort">
+          <option value="nextPlanting">Nejbližší výsadba</option>
+          <option value="plantingYear">Nejdříve v roce</option>
+          <option value="difficultyAsc">Náročnost od nejlehčí</option>
+          <option value="difficultyDesc">Náročnost od nejtěžší</option>
+          <option value="name">Název A-Z</option>
+        </select>
+      </div>
+      <div class="control">
+        <label for="difficultyMax">Max. náročnost</label>
+        <select class="select" id="difficultyMax">
+          <option value="10">Bez omezení</option>
+          <option value="3">Jen 0-3</option>
+          <option value="5">Jen 0-5</option>
+          <option value="7">Jen 0-7</option>
+        </select>
+      </div>
+      <button class="toggle" id="nowToggle" type="button">Jen teď vhodné</button>
+    </section>
+
+    <section class="results-meta">
+      <div id="resultCount"></div>
+      <div id="activeHint"></div>
+    </section>
+
+    <section class="grid" id="grid"></section>
+
+    <section class="empty-state" id="emptyState">
+      <h2>Nic nesedí na filtr</h2>
+      <p>Zkus upravit hledání, vypnout filtr pro aktuální měsíc nebo zvýšit maximální náročnost.</p>
+    </section>
+  </main>
+
+  <script>
+    const RAW_CSV = `"jméno rostliny","latinské jméno","datum doporučené výsatby (více etap)","datum sklizně","Náročnost pro pěstování (0-10)","Postup zalévání","Postup zasazení (typ hlíny a metodika)","Vhodné místo (stín/slunko/balkon/interiér)","Péče o květinu (kdy a jak)","reference (alespoň 1 odkaz)"
+"Rajče třešňové (cherry)","Solanum lycopersicum","květen; červen","červenec; srpen; září; říjen","6","Udržuj stále mírně vlhké; v létě v nádobě často denně. Zalévej ráno ke kořenům (ne na list), aby se snížilo riziko plísní. V horku pomáhá mulč na povrchu substrátu.","Květináč min. 10–15 l na rostlinu (cherry snese menší než velkoplodé). Vzdušný substrát: kvalitní zeleninový/pěstební + 20–30% kompost + perlit. Sázej hlouběji (až po děložní lístky), dej oporu nebo závěsný květináč pro převislé odrůdy.","Plné slunce, teplé závětří; balkon. Sazenice nejdřív interiér (okno / světlo).","Vyvažuj růst: u tyčkových cherry vyštipuj zálistky 1× týdně; přivazuj. Přihnojuj 1× týdně od prvních květů (hnojivo pro plodovou zeleninu). Průběžně odstraň spodní listy, které se dotýkají substrátu.","https://www.rhs.org.uk/vegetables/tomatoes/grow-your-own ; https://www.rhs.org.uk/advice/grow-your-own/containers/may-edible-container-idea ; https://www.matgroup.cz/wp-content/uploads/2025/01/kalendar_pestovani_zeleniny.pdf"
+"Rajče velkoplodé (salátové/tyčkové)","Solanum lycopersicum","květen; červen","červenec; srpen; září; říjen","7","Stejně jako cherry, ale citlivější na výkyvy: zalévej pravidelně a hluboce, nenech jednou vyschnout a podruhé přelít (praskání plodů).","Květináč ideálně 20–30 l na 1 rostlinu. Výživný, ale propustný substrát (zeleninový/rajčatový + kompost + perlit). Sázej hlouběji pro silnější kořeny; dej pevnou oporu.","Plné slunce, závětří; balkon. Sazenice interiér do oteplení.","Vyštipuj zálistky (u tyčkových), větrání porostu (postupné odlistění spodku), vyvazování. Pravidelné přihnojování od květu.","https://www.rhs.org.uk/vegetables/tomatoes/grow-your-own ; https://www.matgroup.cz/wp-content/uploads/2025/01/kalendar_pestovani_zeleniny.pdf"
+"Chilli papričky","Capsicum annuum","květen; červen","červenec; srpen; září; říjen","7","Zalévej, když vršek substrátu lehce proschne; nesnáší trvalé přemokření. V létě v nádobě často denně, ale vždy raději ke kořenům.","Výsev do jemného výsevního substrátu (0,5 cm). Klíčení 24–28°C a hodně světla. Finální nádoba 3–7 l (kompaktní odrůdy) až 10 l. Substrát: výživný, ale vzdušný (perlit).","Plné slunce a teplo; balkon (ideálně chráněný) nebo skleník. V únoru–květnu interiér.","Pro větší keřík zaštípni vrchol po 4–6 patrech listů. V květu přihnojuj draslíkem (plodová). Jemně protřepávej květy pro opylení, pokud je bezvětří.","https://www.rhs.org.uk/vegetables/chilli-pepper/grow-your-own ; https://www.matgroup.cz/wp-content/uploads/2025/01/kalendar_pestovani_zeleniny.pdf"
+"Paprika velká (sladká)","Capsicum annuum","květen; červen","červenec; srpen; září; říjen","8","Pravidelná vlhkost bez přemokření. V době nasazování plodů zalévání nepřerušuj (opad květů/plodů).","Klíčení 24–28°C ve výsevním substrátu. Finální nádoba 7–12 l. Výživný, propustný substrát; drenážní vrstva na dně.","Plné slunce, teplé závětří; balkon / skleník. Sazenice do května v interiéru.","Často potřebuje oporu. Při přetížení redukuj část plodů. Přihnojování pro plodovou zeleninu 1× týdně od květu.","https://www.rhs.org.uk/vegetables/peppers/grow-your-own ; https://www.matgroup.cz/wp-content/uploads/2025/01/kalendar_pestovani_zeleniny.pdf"
+"Bazalka","Ocimum basilicum","květen; červen","červen; červenec; srpen; září","3","Mírně vlhký substrát stále; nenech úplně vyschnout. Zalévej ke kořenům, ne na listy (plíseň).","Lehký, výživný substrát do bylinek/zeleniny. Výsev mělce (jen zasypat). Květináč 15–20 cm; více rostlin raději rozdělit pro proudění vzduchu.","Teplo a světlo: slunce až lehký polostín; balkon od konce května. V předjaří interiér (světlé okno / světlo).","Pravidelně zaštípuj vrcholy nad párem listů pro košatění. Květy průběžně odstraňuj, jinak končí produkce listů.","https://www.rhs.org.uk/herbs/basil/grow-your-own"
+"Petržel","Petroselinum crispum","březen; duben; květen; červen","květen; červen; červenec; srpen; září; říjen; listopad","2","Stálá vlhkost bez přemokření; v horku častěji. V nádobách kontroluj denně.","Výsev 1 cm do výživného, vlhko držícího, ale propustného substrátu. Květináč min. 20 cm hluboký. Semena lze předem namočit pro rychlejší klíčení.","Slunce až polostín; balkon i interiér (světlé okno).","Sklízej vnější listy u báze pro další růst. Ve 2. roce může vybíhat do květu – pak je lepší obnovit výsev.","https://www.rhs.org.uk/herbs/parsley/grow-your-own"
+"Pažitka","Allium schoenoprasum","březen; duben; květen; červen","květen; červen; červenec; srpen; září; říjen","2","Mírně vlhký substrát; nenech dlouho vyschnout. V zimě venku téměř nezalévat (jen když je sucho a nemrzne).","Květináč 15–20 cm hluboký, propustný substrát s kompostem. Výsev mělce, lehce zasypat.","Slunce až polostín; balkon; v zimě lze rychlit v interiéru.","Stříhej listy 2–3 cm nad zemí. Po odkvětu můžeš seříznout celé trsy pro obnovu. Každé 2–3 roky rozděl a zmlaď.","https://www.rhs.org.uk/herbs/chives/grow-your-own"
+"Tymián","Thymus vulgaris","duben; květen; červen; září; říjen","květen; červen; červenec; srpen; září; říjen","4","Zalévej střídmě: nech proschnout vršek substrátu. V zimě hlavní riziko = přemokření.","Grit/sand mix: substrát do bylinek + 20–30% písek/štěrk pro drenáž. Květináč s otvory, ideálně terakota.","Plné slunce; balkon. Přezimuje venku, ale nádoba potřebuje ochranu před dlouhým promokáním.","Lehký střih po odkvětu a na jaře (ne do starého dřeva). Průběžná sklizeň podporuje větvení.","https://www.rhs.org.uk/herbs/thyme/grow-your-own"
+"Kopr","Anethum graveolens","duben; květen; červen; červenec","červen; červenec; srpen; září; říjen","3","Vzejití vyžaduje rovnoměrnou vlhkost. Pak zalévej pravidelně; v horku častěji.","Kvůli kůlovému kořeni preferuje přímý výsev do hlubší nádoby (min. 20–25 cm). Substrát: propustný, středně výživný.","Slunce, závětří; balkon.","Pro listy nenech dlouho přejít do květu (můžeš část ponechat na semeno). U vyšších odrůd vyvazuj proti větru.","https://www.rhs.org.uk/herbs/dill/grow-your-own"
+"Máta","Mentha spicata","březen; duben; květen; červen; červenec; srpen; září","květen; červen; červenec; srpen; září; říjen","2","Má ráda vlhko: zalévej často, zejména v nádobě. Nenech úplně vyschnout.","Výživný, vlhko držící substrát s kompostem. Pěstuj odděleně (je agresivní). Květináč 20–30 cm.","Polostín až slunce; balkon i interiér.","Pravidelně seřezávej pro zahuštění. Před květem můžeš seříznout níž pro nové jemné výhony. Každý rok zmlaď (dělení/repot).","https://www.rhs.org.uk/herbs/mint/grow-your-own"
+"Česnek","Allium sativum","únor; březen; říjen; listopad","červenec; srpen; září","5","Po výsadbě zalij. Pak udržuj mírně vlhké během aktivního růstu; omez zálivku při žloutnutí natě (dozrávání).","Nádoba min. 20–25 cm hluboká. Lehčí, propustná, úrodná zemina. Sázej stroužky 5 cm hluboko, špičkou nahoru, 10–15 cm od sebe.","Plné slunce; balkon.","U paličáků vylamuj květní stvoly (scapes) pro větší cibule. Mulč v zimě chrání nádobu.","https://www.rhs.org.uk/vegetables/garlic/grow-your-own"
+"Cibule (bulbová)","Allium cepa","březen; duben","červenec; srpen; září","5","Zalévej pravidelně v rané fázi. Jakmile cibule začnou sílit, zálivku postupně omez (lepší vyzrávání).","Velký truhlík/květináč min. 20 cm hluboký. Propustná zemina. Sazečku sázej tak, aby špička byla těsně nad povrchem.","Plné slunce; balkon.","Udržuj bez plevelů (v nádobách hlavně konkurence). Po sklizni dosuš na vzdušném místě pro skladování.","https://www.rhs.org.uk/vegetables/onions/grow-your-own ; https://www.matgroup.cz/wp-content/uploads/2025/01/kalendar_pestovani_zeleniny.pdf"
+"Cuketa","Cucurbita pepo","květen; červen","červen; červenec; srpen; září; říjen","7","Velmi žíznivá: zalévej hluboce a často, v horku klidně denně. Zalévej ke kořenům, listy nech co nejsušší.","Jen 1 rostlina na nádobu. Pro keřové odrůdy 30–50 l (čím víc, tím stabilnější vláha). Substrát extra výživný (kompost + dlouhodobé hnojivo).","Plné slunce, závětří; balkon (větší).","Pravidelně sklízej malé plody (podporuje další). Odstraň staré listy u země pro cirkulaci. Sleduj padlí; nepřemokřuj listy.","https://www.rhs.org.uk/vegetables/courgettes/grow-your-own ; https://www.matgroup.cz/wp-content/uploads/2025/01/kalendar_pestovani_zeleniny.pdf"
+"Okurky","Cucumis sativus","květen; červen","červenec; srpen; září","7","Udržuj trvale vlhké (okurka špatně snáší sucho). V nádobě často denně, ráno. Vyhni se kropení listů.","Nádoba min. 30 cm široká i hluboká, výživný a propustný substrát. Instaluj mříž/treláž hned při výsadbě. Výsev 2 cm hluboko.","Plné slunce, teplé závětří; balkon (ideálně s oporou).","Vyvazuj výhony. Pravidelně sklízej, jinak rostlina zpomalí. Přihnojuj 1× týdně od prvních plodů.","https://www.rhs.org.uk/vegetables/cucumbers/grow-your-own ; https://www.matgroup.cz/wp-content/uploads/2025/01/kalendar_pestovani_zeleniny.pdf"
+"Jahody","Fragaria × ananassa","březen; duben; srpen; září","květen; červen; červenec","5","Zalévej pravidelně, zejména při kvetení a zrání. Nádoby vysychají rychle; v létě kontroluj denně.","Propustný, úrodný substrát s kompostem. Korunka (střed rostliny) musí být nad úrovní substrátu. Nádoby 15–20 cm hluboké; 1 rostlina/cca 20 cm délky truhlíku.","Plné slunce; balkon (dobré i závěsné koše).","Odstraňuj šlahouny, pokud nechceš množit. Chraň plody před ptáky. Na zimu izoluj květináč (kořeny v nádobě promrzají dřív).","https://www.rhs.org.uk/fruit/strawberries/grow-your-own"
+"Křen","Armoracia rusticana","březen; duben; květen; červen","říjen; listopad; prosinec; leden; únor; březen","6","Udržuj rovnoměrnou vlhkost, zejména v létě. Nevysušovat (kořen dřevnatí), ale ani nenechat stát ve vodě.","Pěstuj v hluboké nádobě (min. 30–40 cm) kvůli dlouhému kořenu. Loam-based/hlinitý substrát (typ John Innes) + kompost. Výsadba kořenových řízků tak, aby horní konec byl několik cm pod povrchem.","Slunce až polostín; balkon. (V nádobě je to i doporučené proti invazivitě.)","Pro velký hlavní kořen odstraňuj boční výhony. Na podzim můžeš celý trs vyjmout, vzít velké kořeny na kuchyň a malé řízky vrátit.","https://www.rhs.org.uk/herbs/horseradish/grow-your-own"
+"Houby (hlíva ústřičná – domácí kit)","Pleurotus ostreatus","—","—","4","Zvyš vlhkost: rosení substrátu 1–2× denně, vysoká vlhkost + čerstvý vzduch. Nezalévat proudem.","Použij hotový kit (substrát naočkovaný podhoubím). Umísti do světlého místa bez přímého slunce; udržuj 15–22°C; udělej otvor (podle návodu) a rosi.","Interiér (kuchyň/okno) nebo chráněný stinný balkon; nepřímé světlo.","Sklízej, když se klobouky rozvinou, ale ještě nezačnou masivně pouštět výtrusy. Po první vlně nech kit odpočinout a podle návodu rehydratuj.","https://www.rhs.org.uk/advice/hub-content/features/grow-mushrooms ; https://www.novinky.cz/clanek/bydleni-zahrada-mate-radi-hlivu-ustricnou-navod-na-pestovani-na-slame-drevu-i-v-zakoupene-sadbe-40402308"
+"Kanadské borůvky","Vaccinium corymbosum","březen; duben; listopad; prosinec","červenec; srpen; září","8","Stále mírně vlhké, nikdy nenech úplně vyschnout. Ideálně dešťová/soft voda (tvrdá voda může zvyšovat pH).","Nutný kyselý substrát (ericaceous) pH cca 4,5–5,5. Velká nádoba 40–50 cm průměr. Přidej mulč z borové kůry. Drenáž pro odtok, ale substrát nesmí vysychat.","Slunce až polostín; chráněný balkon. Květináč v zimě izolovat / chránit před promokáním a promrzáním.","Pro lepší opylení a úrodu je vhodné mít min. 2 různé odrůdy. Řez v zimě po založení keře (odstraň staré/poškozené větve). Hnojivo pro kyselomilné na jaře.","https://www.rhs.org.uk/fruit/blueberries/grow-your-own ; https://www.prirodnizahradytrejbal.com/jedlybalkon/jak-pestovat-kanadske-boruvky-v-nadobach"
+"Ředkvičky","Raphanus sativus","březen; duben; květen; červen; červenec; srpen; září","duben; květen; červen; červenec; srpen; září; říjen","2","Rovnoměrně vlhké (jinak pálí, praskají a dřevnatí). V nádobě kontroluj často.","Lehký substrát do zeleniny; výsev cca 1 cm. Truhlík 15–20 cm hluboký. Řeď na 3–5 cm podle odrůdy.","Slunce na jaře/podzim, v létě spíš polostín; balkon.","Sklízej včas (přerostlé jsou tuhé). Udržuj bez plevelů/konkurence. V létě chraň před přehřátím nádoby.","https://www.rhs.org.uk/vegetables/radishes/grow-your-own ; https://www.matgroup.cz/wp-content/uploads/2025/01/kalendar_pestovani_zeleniny.pdf"
+"Dýně","Cucurbita pepo","květen; červen","září; říjen","9","Velmi náročné na vodu: zalévej hluboce a často; v horku denně. Nezalévej listy (padlí).","Jen 1 rostlina do extra velké nádoby: min. 60–100 l (mini/bush), s velmi výživným substrátem (kompost + dlouhodobé hnojivo). Přidej oporu/treláž u popínavých typů.","Plné slunce; balkon jen pokud máš opravdu místo. Kořenovou část je dobré stínit proti přehřátí nádoby.","Ruční opylování zvyšuje jistotu plodů. Pro větší velikost omez počet plodů (např. 1–3 na rostlinu). Při zrání podlož plod, aby neležel ve vlhku.","https://www.rhs.org.uk/vegetables/pumpkins/grow-your-own ; https://shop.culinabotanica.cz/rady-tipy/maly-pruvodce-pestovanim-dyni/"
+"Polníček (mâche)","Valerianella locusta","březen; duben; srpen; září","duben; květen; červen; říjen; listopad; prosinec; leden; únor; březen","3","Při klíčení drž rovnoměrnou vlhkost. V zimě zalévej jen při delším suchu a nemrazu.","Truhlík 15 cm hluboký, propustný substrát. Výsev mělce, lehce zasypat; vyjednoť na cca 10–15 cm.","Slunce až polostín; balkon. Zvládá chlad, při holomrazech pomůže netkaná textilie/cloche.","Sklízej celé růžice nebo postupně listy. Chraň před slimáky, zvlášť na podzim.","https://www.rhs.org.uk/plants/67250/valerianella-locusta/details ; https://www.matgroup.cz/wp-content/uploads/2025/01/kalendar_pestovani_zeleniny.pdf"
+"Špenát","Spinacia oleracea","březen; duben; květen; srpen; září","duben; květen; červen; září; říjen; listopad","4","Udržuj vlhko; sucho + horko = vybíhání do květu. Zalévej pravidelně a spíš ráno.","Výživný substrát s organickou hmotou (kompost). Květináč 20 cm hluboký. Výsev 1–2 cm, postupné výsevy pro delší sklizeň.","Slunce v chladnu, v teple lehký polostín; balkon.","Sklízej vnější listy (cut-and-come-again). V létě stínuj a zalévej pro omezení vybíhání.","https://www.rhs.org.uk/vegetables/spinach/grow-your-own"
+"Salát (listový/hlávkový)","Lactuca sativa","březen; duben; květen; červen; červenec; srpen; září","duben; květen; červen; červenec; srpen; září; říjen","3","Rovnoměrně vlhké, jinak hořkne a vybíhá. V nádobě v létě často denně.","Mělčí nádoby stačí (15–20 cm), ale musí držet vlhko. Výsev mělce (0,5 cm), vyjednoť. Výživný, propustný substrát.","Jaro/podzim slunce, léto polostín; balkon i interiér (baby listy).","Sklízej průběžně (listové) nebo řež hlávky včas (nečekat na vybíhání). Succese výsevů je klíč pro sklizeň celý rok.","https://www.rhs.org.uk/vegetables/lettuce/grow-your-own"
+"Rukola (rocket/arugula)","Eruca vesicaria subsp. sativa","březen; duben; květen; červen; červenec; srpen; září","duben; květen; červen; červenec; srpen; září; říjen","2","Drž vlhko; sucho = pálivější listy a rychlejší vybíhání.","Truhlík 10–15 cm hluboký. Výsev na povrch a lehce zasypat. Substrát do zeleniny, spíš lehčí.","Slunce až polostín (v létě raději polostín); balkon.","Sklízej mladé listy, častěji seřezávej pro nové. Výsevy po dávkách prodlouží sezónu.","https://www.rhs.org.uk/vegetables/rocket/grow-your-own"
+"Řepa červená","Beta vulgaris","duben; květen; červen; červenec","červen; červenec; srpen; září; říjen","4","Rovnoměrně vlhké; při suchu dřevnatí, při extrému praská. V nádobě zalévej pravidelně.","Květináč/truhlík 25 cm hluboký. Výsev 2–3 cm. Po vzejití vyjednoť (semínko často = více rostlin v chuchvalci). Výživný, propustný substrát.","Slunce; balkon.","Sklízej, když je kořen cca velikosti golfového míčku pro nejlepší chuť. Přerostlá bývá tužší.","https://www.rhs.org.uk/vegetables/beetroot/grow-your-own"
+"Mrkev (krátké odrůdy do nádob)","Daucus carota subsp. sativus","březen; duben; květen; červen; červenec","červen; červenec; srpen; září; říjen; listopad","5","Nejtěžší fáze je klíčení: povrch nesmí vyschnout (může trvat 2–3 týdny). Pak udržuj rovnoměrnou vlhkost.","Nutná hlubší nádoba: min. 20–30 cm a lehký, kamenů prostý substrát (výsevní/zeleninový + písek/perlit). Nejpohodlnější jsou kulaté/krátké odrůdy. Výsev 0,5–1 cm.","Slunce až lehký polostín; balkon.","Brzy vyjednoť, jinak budou tenké. Proti vrtalce/pochmurnatce pomáhá kryt (síť).","https://www.rhs.org.uk/vegetables/carrots/grow-your-own"
+"Mangold","Beta vulgaris subsp. vulgaris","duben; květen; červen; červenec","červen; červenec; srpen; září; říjen; listopad","3","Zalévej pravidelně; snese i mírné sucho, ale pro jemné listy drž vlhkost. V nádobě kontroluj často.","Nádoba 20–25 cm hluboká, výživný substrát. Výsev 2 cm, vyjednoť na 20–30 cm pro velké rostliny.","Slunce, v létě snese polostín; balkon.","Sklízej vnější listy, střed nech růst. Pokud vybíhá, odřízni květní stvol a často znovu obrazí.","https://www.rhs.org.uk/vegetables/chard/grow-your-own"
+"Kadeřávek (kale)","Brassica oleracea var. sabellica","březen; duben; květen; červen; červenec","září; říjen; listopad; prosinec; leden; únor; březen","6","Udržuj rovnoměrnou vlhkost, hlavně v nádobách v létě. Nepřesušovat.","Pro balkon volte nižší odrůdy a velký květináč (min. 30–40 cm). Výživný substrát s kompostem; dobrá drenáž.","Slunce; balkon. Dobře snáší chlad.","Chraň mladé sazenice před slimáky. Síť proti běláskům a ptákům. Sklízej listy odspodu, vrchol nech tvořit dál.","https://www.rhs.org.uk/vegetables/kale/grow-your-own"
+"Pak choi (bok choy)","Brassica rapa subsp. chinensis","duben; květen; srpen; září","květen; červen; červenec; srpen; září; říjen","4","Rovnoměrně vlhké; při suchu i stresu rychle vybíhá. Zalévej často.","Truhlík 15–20 cm hluboký. Výsev cca 1 cm, vyjednoť 15–25 cm. Výživný substrát pro listovou zeleninu.","Jaro/podzim slunce, v létě polostín; balkon.","Síť proti dřepčíku a běláskům. Můžeš sklízet jako baby listy opakovaně (cut-and-come-again).","https://www.rhs.org.uk/vegetables/pak-choi/grow-your-own"
+"Hrášek (cukrový/raný, nízké odrůdy)","Pisum sativum","březen; duben; květen; červen","červen; červenec; srpen","4","Zalévej, když vršek začne schnout; nejdůležitější je doba kvetení a nalévání lusků (nesmí přeschnout).","Hlubší nádoba (30 cm+) a opora (síť/tyčky). Substrát výživný, ale nepřehnojený dusíkem. Výsev 5 cm hluboko.","Slunce, chladnější stanoviště snese; balkon.","Poskytni oporu včas. Pravidelně sklízej, ať rostlina dál kvete. Zaštipnutí vrcholů může pomoci proti mšicím.","https://www.rhs.org.uk/vegetables/peas/grow-your-own"
+"Fazole keříčkové (french beans, dwarf)","Phaseolus vulgaris","květen; červen","červenec; srpen; září","5","Teplomilné: po výsevu/ výsadbě udržuj vlhko, ale ne studené přemokření. V době květu a lusků zalévej pravidelně.","Výsev 5 cm hluboko do teplého substrátu. Nádoba min. 30 cm (hloubka šetří zálivku). Propustná zemina s kompostem.","Plné slunce, teplé závětří; balkon.","U keříčkových obvykle netřeba vysoká opora, ale pár větviček pomůže. Sklízej často pro další lusky.","https://www.rhs.org.uk/vegetables/french-beans/grow-your-own"
+"Lichořeřišnice (jedlé květy)","Tropaeolum majus","květen; červen","červen; červenec; srpen; září; říjen","2","Střední zálivka: udržuj mírně vlhké, ale nepřehnojuj ani nepřelévej (jde víc do listu).","Květináč 20 cm+; propustný substrát (spíš středně výživný). Semena cca 2 cm hluboko. Převislé odrůdy do závěsných nádob.","Slunce až polostín; balkon.","Zaštipuj špičky pro zahuštění. Odkvétající květy odstraňuj pro další kvetení. Může fungovat jako „lapací“ rostlina na mšice.","https://www.rhs.org.uk/herbs/edible-flowers"
+"Rozmarýn","Salvia rosmarinus","duben; květen; červen; září; říjen","duben; květen; červen; červenec; srpen; září; říjen; listopad","6","Zalévej střídmě; mezi zálivkami nech proschnout. V zimě nejčastější chyba = mokré kořeny.","Substrát velmi propustný: (např. loam-based) + 20–30% grit/štěrk. Květináč s drenáží. V nádobě se mu často daří lépe než v těžké půdě.","Plné slunce, závětří; balkon. Při silných mrazech raději chránit nebo přenést do chladného světlého interiéru.","Lehký každoroční řez po odkvětu drží tvar. Neřež hluboko do starého dřeva. V zimě spíš jen „údržbové“ zastřižení.","https://www.rhs.org.uk/herbs/rosemary/grow-your-own"
+"Šalvěj lékařská","Salvia officinalis","duben; květen; červen","květen; červen; červenec; srpen; září; říjen","5","Střídmě; po zakořenění snese sucho. V zimě minimalizuj zálivku.","Propustný, spíš sušší substrát; přidej grit. Květináč 20–30 cm. Nesnáší dlouhodobé přemokření.","Plné slunce, závětří; balkon.","Po odkvětu lehce seřízni pro zahuštění. Na jaře zmlazovací řez, ale ne úplně do starého dřeva.","https://www.rhs.org.uk/herbs/sage/grow-your-own"
+"Oregano (dobromysl)","Origanum vulgare","duben; květen; červen","květen; červen; červenec; srpen; září; říjen","4","Zalévej střídmě; mezi zálivkami nech proschnout. Přemokření v chladu škodí.","Slunné a propustné: substrát do bylinek + grit. Květináč 20–30 cm.","Plné slunce; balkon.","Občasný hlubší sestřih po kvetení podpoří nový jemný list. Každé 2–3 roky rozděl a zmlaď.","https://www.rhs.org.uk/herbs/oregano/grow-your-own"
+"Koriandr","Coriandrum sativum","březen; duben; květen; červen; červenec; srpen; září","květen; červen; červenec; srpen; září; říjen","4","Udržuj vlhko; sucho a horko urychlí vybíhání. V létě raději ranní zálivka a polostín.","Koriandr nemá rád přesazování: přímý výsev do květináče 20 cm hlubokého. Výsev cca 1–2 cm. Výživný, propustný substrát.","Jaro/podzim slunce, léto polostín; balkon i interiér (světlo).","Klíč je succession sowing: vysévej po dávkách. Sklízej často mladé listy. Pokud chceš semeno, nech část vykvést a dozrát.","https://www.rhs.org.uk/herbs/coriander/grow-your-own"
+"Meduňka","Melissa officinalis","duben; květen; červen","květen; červen; červenec; srpen; září; říjen","3","Pravidelně; má ráda mírně vlhkou půdu. Po zakořenění snese i kratší sucho, ale v nádobách vysychá rychle.","Výživný substrát s kompostem. Květináč 30 cm (umí hodně narůst). Dobrá drenáž.","Slunce až polostín; balkon.","Seřezávej po kvetení nebo během sezóny pro nové jemné listy. Pokud nechceš samovýsev, odstraň květenství.","https://www.rhs.org.uk/herbs/lemon-balm/grow-your-own"`;
+
+    const monthOrder = {
+      "leden": 0,
+      "únor": 1,
+      "březen": 2,
+      "duben": 3,
+      "květen": 4,
+      "červen": 5,
+      "červenec": 6,
+      "srpen": 7,
+      "září": 8,
+      "říjen": 9,
+      "listopad": 10,
+      "prosinec": 11
+    };
+
+    const monthNames = Object.keys(monthOrder);
+    const seasonGroups = [
+      { label: "Jaro", months: ["březen", "duben", "květen"] },
+      { label: "Léto", months: ["červen", "červenec", "srpen"] },
+      { label: "Podzim", months: ["září", "říjen", "listopad"] },
+      { label: "Zima", months: ["prosinec", "leden", "únor"] }
+    ];
+
+    const searchEl = document.getElementById("search");
+    const sortEl = document.getElementById("sort");
+    const difficultyMaxEl = document.getElementById("difficultyMax");
+    const nowToggleEl = document.getElementById("nowToggle");
+    const gridEl = document.getElementById("grid");
+    const resultCountEl = document.getElementById("resultCount");
+    const activeHintEl = document.getElementById("activeHint");
+    const emptyStateEl = document.getElementById("emptyState");
+    const heroStatsEl = document.getElementById("heroStats");
+    const seasonWheelEl = document.getElementById("seasonWheel");
+
+    const state = {
+      query: "",
+      sort: "nextPlanting",
+      difficultyMax: 10,
+      onlyNow: false
+    };
+
+    const now = new Date();
+    const currentMonthIndex = now.getMonth();
+    const currentMonthName = monthNames[currentMonthIndex];
+
+    function parseCSV(text) {
+      const rows = [];
+      let row = [];
+      let current = "";
+      let inQuotes = false;
+
+      for (let i = 0; i < text.length; i += 1) {
+        const char = text[i];
+
+        if (inQuotes) {
+          if (char === "\"") {
+            if (text[i + 1] === "\"") {
+              current += "\"";
+              i += 1;
+            } else {
+              inQuotes = false;
+            }
+          } else {
+            current += char;
+          }
+        } else if (char === "\"") {
+          inQuotes = true;
+        } else if (char === ",") {
+          row.push(current);
+          current = "";
+        } else if (char === "\n") {
+          row.push(current);
+          rows.push(row);
+          row = [];
+          current = "";
+        } else if (char !== "\r") {
+          current += char;
+        }
+      }
+
+      if (current.length || row.length) {
+        row.push(current);
+        rows.push(row);
+      }
+
+      return rows;
+    }
+
+    function monthList(value) {
+      return value
+        .split(";")
+        .map((item) => item.trim())
+        .filter((item) => item && item !== "—");
+    }
+
+    function splitRefs(value) {
+      return value
+        .split(";")
+        .map((item) => item.trim())
+        .filter(Boolean);
+    }
+
+    function nextOccurrence(monthIndexes) {
+      if (!monthIndexes.length) return Number.POSITIVE_INFINITY;
+      return monthIndexes
+        .map((month) => (month - currentMonthIndex + 12) % 12)
+        .sort((a, b) => a - b)[0];
+    }
+
+    const parsed = parseCSV(RAW_CSV);
+    const headers = parsed[0];
+    const plants = parsed.slice(1).map((row, index) => {
+      const item = Object.fromEntries(headers.map((header, cellIndex) => [header, row[cellIndex]]));
+      const plantingMonths = monthList(item["datum doporučené výsatby (více etap)"]);
+      const plantingIndexes = plantingMonths.map((month) => monthOrder[month]).filter((value) => value !== undefined);
+      const difficulty = Number(item["Náročnost pro pěstování (0-10)"]);
+
+      return {
+        id: index,
+        name: item["jméno rostliny"],
+        latin: item["latinské jméno"],
+        planting: item["datum doporučené výsatby (více etap)"],
+        harvest: item["datum sklizně"],
+        difficulty,
+        watering: item["Postup zalévání"],
+        plantingMethod: item["Postup zasazení (typ hlíny a metodika)"],
+        place: item["Vhodné místo (stín/slunko/balkon/interiér)"],
+        care: item["Péče o květinu (kdy a jak)"],
+        references: splitRefs(item["reference (alespoň 1 odkaz)"]),
+        plantingMonths,
+        plantingIndexes,
+        earliestPlantingIndex: plantingIndexes.length ? Math.min(...plantingIndexes) : Number.POSITIVE_INFINITY,
+        nextPlantingDistance: nextOccurrence(plantingIndexes),
+        currentMonthMatch: plantingIndexes.includes(currentMonthIndex)
+      };
+    });
+
+    function renderStats() {
+      const easyPlants = plants.filter((plant) => plant.difficulty <= 3).length;
+      const plantNow = plants.filter((plant) => plant.currentMonthMatch).length;
+
+      heroStatsEl.innerHTML = `
+        <div class="stat">
+          <strong>${plants.length}</strong>
+          <span>rostlin v databázi</span>
+        </div>
+        <div class="stat">
+          <strong>${plantNow}</strong>
+          <span>vhodné právě teď</span>
+        </div>
+        <div class="stat">
+          <strong>${easyPlants}</strong>
+          <span>snadné kusy 0-3</span>
+        </div>
+      `;
+    }
+
+    function renderSeasons() {
+      seasonWheelEl.innerHTML = seasonGroups.map((group) => {
+        const active = group.months.includes(currentMonthName) ? "active" : "";
+        const count = plants.filter((plant) => plant.plantingMonths.some((month) => group.months.includes(month))).length;
+        return `
+          <div class="season-chip ${active}">
+            <strong>${group.label}</strong>
+            <span>${count} rostlin</span>
+          </div>
+        `;
+      }).join("");
+    }
+
+    function escapeHtml(value) {
+      return value
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll("\"", "&quot;")
+        .replaceAll("'", "&#39;");
+    }
+
+    function cardTemplate(plant) {
+      const monthBadges = plant.plantingMonths.length
+        ? plant.plantingMonths.map((month) => `<span class="month ${month === currentMonthName ? "current" : ""}">${escapeHtml(month)}</span>`).join("")
+        : `<span class="month">bez termínu</span>`;
+
+      const references = plant.references.map((href) => {
+        const safeHref = escapeHtml(href);
+        return `<li><a href="${safeHref}" target="_blank" rel="noreferrer">${safeHref}</a></li>`;
+      }).join("");
+
+      const quickNote = plant.currentMonthMatch
+        ? `Teď je dobré okno pro výsadbu.`
+        : plant.nextPlantingDistance === Number.POSITIVE_INFINITY
+          ? `Nemá klasický kalendář výsadby.`
+          : `Nejbližší vhodný termín je za ${plant.nextPlantingDistance} měsíců.`;
+
+      return `
+        <article class="card">
+          <div class="card-head">
+            <div>
+              <h2>${escapeHtml(plant.name)}</h2>
+              <div class="latin">${escapeHtml(plant.latin)}</div>
+            </div>
+            <div class="difficulty">
+              <strong>${plant.difficulty}</strong>
+              <span>náročnost</span>
+            </div>
+          </div>
+
+          <div class="pill-row">
+            <span class="pill">${plant.currentMonthMatch ? "Vysadit teď" : "Později"}</span>
+            <span class="pill">Sklizeň: ${escapeHtml(plant.harvest)}</span>
+          </div>
+
+          <div class="month-row" style="margin-top: 12px;">${monthBadges}</div>
+          <p class="lead">${escapeHtml(quickNote)} ${escapeHtml(plant.place)}</p>
+
+          <details class="details">
+            <summary>
+              <span>Zobrazit péči a postup</span>
+              <span class="chevron">⌄</span>
+            </summary>
+            <div class="detail-grid">
+              <div class="detail-block">
+                <h3>Zalévání</h3>
+                <p>${escapeHtml(plant.watering)}</p>
+              </div>
+              <div class="detail-block">
+                <h3>Kam umístit</h3>
+                <p>${escapeHtml(plant.place)}</p>
+              </div>
+              <div class="detail-block full">
+                <h3>Jak zasadit</h3>
+                <p>${escapeHtml(plant.plantingMethod)}</p>
+              </div>
+              <div class="detail-block full">
+                <h3>Průběžná péče</h3>
+                <p>${escapeHtml(plant.care)}</p>
+              </div>
+              <div class="detail-block full">
+                <h3>Reference</h3>
+                <ul>${references}</ul>
+              </div>
+            </div>
+          </details>
+        </article>
+      `;
+    }
+
+    function getVisiblePlants() {
+      const query = state.query.trim().toLocaleLowerCase("cs");
+
+      const filtered = plants.filter((plant) => {
+        const matchesText = !query || plant.name.toLocaleLowerCase("cs").includes(query) || plant.latin.toLocaleLowerCase("cs").includes(query);
+        const matchesDifficulty = plant.difficulty <= state.difficultyMax;
+        const matchesNow = !state.onlyNow || plant.currentMonthMatch;
+        return matchesText && matchesDifficulty && matchesNow;
+      });
+
+      const sorters = {
+        nextPlanting: (a, b) => a.nextPlantingDistance - b.nextPlantingDistance || a.earliestPlantingIndex - b.earliestPlantingIndex || a.name.localeCompare(b.name, "cs"),
+        plantingYear: (a, b) => a.earliestPlantingIndex - b.earliestPlantingIndex || a.name.localeCompare(b.name, "cs"),
+        difficultyAsc: (a, b) => a.difficulty - b.difficulty || a.name.localeCompare(b.name, "cs"),
+        difficultyDesc: (a, b) => b.difficulty - a.difficulty || a.name.localeCompare(b.name, "cs"),
+        name: (a, b) => a.name.localeCompare(b.name, "cs")
+      };
+
+      return filtered.sort(sorters[state.sort]);
+    }
+
+    function render() {
+      const visiblePlants = getVisiblePlants();
+      gridEl.innerHTML = visiblePlants.map(cardTemplate).join("");
+      emptyStateEl.classList.toggle("visible", visiblePlants.length === 0);
+
+      resultCountEl.innerHTML = `<strong>${visiblePlants.length}</strong> zobrazených rostlin z ${plants.length}`;
+      activeHintEl.textContent = state.onlyNow
+        ? `Filtr: ${currentMonthName} · max náročnost ${state.difficultyMax}`
+        : `Aktuální měsíc: ${currentMonthName} · max náročnost ${state.difficultyMax}`;
+
+      nowToggleEl.classList.toggle("active", state.onlyNow);
+    }
+
+    searchEl.addEventListener("input", (event) => {
+      state.query = event.target.value;
+      render();
+    });
+
+    sortEl.addEventListener("change", (event) => {
+      state.sort = event.target.value;
+      render();
+    });
+
+    difficultyMaxEl.addEventListener("change", (event) => {
+      state.difficultyMax = Number(event.target.value);
+      render();
+    });
+
+    nowToggleEl.addEventListener("click", () => {
+      state.onlyNow = !state.onlyNow;
+      render();
+    });
+
+    renderStats();
+    renderSeasons();
+    render();
+  </script>
+</body>
+</html>
