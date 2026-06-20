@@ -54,13 +54,54 @@
       background: #1f1713;
     }
 
+    .language-switcher {
+      position: absolute;
+      top: 1.25rem;
+      right: 1.4rem;
+      z-index: 3;
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 0.35rem 0.55rem;
+      border-radius: 999px;
+      background: rgba(30, 20, 15, 0.48);
+      color: #fffaf4;
+      backdrop-filter: blur(6px);
+    }
+
+    .language-switcher button {
+      padding: 0.15rem 0.2rem;
+      border: 0;
+      background: transparent;
+      color: inherit;
+      font: inherit;
+      font-size: 0.82rem;
+      cursor: pointer;
+      opacity: 0.62;
+    }
+
+    .language-switcher button:hover,
+    .language-switcher button:focus-visible,
+    .language-switcher button[aria-pressed="true"] {
+      opacity: 1;
+    }
+
+    .language-switcher button[aria-pressed="true"] {
+      text-decoration: underline;
+      text-underline-offset: 0.2em;
+    }
+
+    .language-divider {
+      opacity: 0.55;
+    }
+
     .hero-topline {
       position: absolute;
       top: 2.2rem;
       left: 50%;
       z-index: 2;
       transform: translateX(-50%);
-      width: min(calc(100% - 2rem), 42rem);
+      width: min(calc(100% - 11rem), 42rem);
       text-align: center;
       color: var(--cream);
       font-size: clamp(1.8rem, 4.8vw, 2.6rem);
@@ -368,7 +409,7 @@
       }
 
       .hero-topline {
-        top: 1.4rem;
+        top: 4rem;
         width: min(calc(100% - 1.5rem), 30rem);
         font-size: 1.55rem;
         letter-spacing: 0.16em;
@@ -408,6 +449,11 @@
       .music-label {
         font-size: 0.88rem;
       }
+
+      .language-switcher {
+        top: 0.85rem;
+        right: 0.85rem;
+      }
     }
 
     @media (min-width: 641px) and (max-width: 1024px) {
@@ -432,6 +478,11 @@
 </head>
 <body>
   <header class="hero">
+    <nav class="language-switcher" aria-label="Výběr jazyka">
+      <button type="button" data-language="cs" aria-label="Čeština" aria-pressed="true">CZ</button>
+      <span class="language-divider" aria-hidden="true">/</span>
+      <button type="button" data-language="en" aria-label="English" aria-pressed="false">ENG</button>
+    </nav>
     <div class="hero-bg is-active" style="background-image: url('pictures/pic3.png');"></div>
     <div class="hero-bg" style="background-image: url('pictures/pic4.png');"></div>
     <div class="hero-bg" style="background-image: url('pictures/pic5.png');"></div>
@@ -440,10 +491,10 @@
     <div class="hero-bg" style="background-image: url('pictures/pic8.png');"></div>
     <div class="hero-bg" style="background-image: url('pictures/pic9.png');"></div>
     <div class="hero-bg" style="background-image: url('pictures/pic10.png');"></div>
-    <p class="hero-topline">Zveme vás na</p>
+    <p class="hero-topline" data-i18n="heroTopline">Zveme vás na</p>
 
     <div class="hero-card">
-      <h1>naší besídku (svatbu)</h1>
+      <h1 data-i18n="heroTitle">naší besídku (svatbu)</h1>
       <button class="music-toggle" type="button" aria-pressed="false" aria-label="Přehrát hudbu">
         <svg class="sound-off-icon" viewBox="0 0 24 24" aria-hidden="true" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
           <path d="M4 9h4l5-4v14l-5-4H4z"></path>
@@ -454,9 +505,9 @@
           <path d="M16 9.5a4.5 4.5 0 0 1 0 5"></path>
           <path d="M18.5 7a8 8 0 0 1 0 10"></path>
         </svg>
-        <span class="music-label">Nalaďte se</span>
+        <span class="music-label" data-i18n="musicLabel">Nalaďte se</span>
       </button>
-      <a class="hero-arrow" href="#info" aria-label="Posunout na další informace">
+      <a class="hero-arrow" href="#info" aria-label="Posunout na další informace" data-i18n-aria="moreInfo">
         <svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <path d="M6 9l6 6 6-6"></path>
         </svg>
@@ -471,13 +522,14 @@
   <main class="details" id="info">
     <section class="details-card">
       <h2>Save the date!</h2>
-      <p class="tagline">(česky přijď nebo chcípneš)</p>
-      <p class="date">19. září 2026</p>
+      <p class="tagline" data-i18n="tagline">(česky přijď nebo chcípneš)</p>
+      <p class="date" data-i18n="date">19. září 2026</p>
       <a
         class="cta"
         href="https://calendar.google.com/calendar/render?action=TEMPLATE&text=Svatba%20Veronička%20kočička%20a%20Rozumbrada&dates=20260919/20260920&location=Don%C3%A1t%C5%AFv%20Ml%C3%BDn&ctz=Europe%2FPrague&details=Svatebn%C3%AD%20den%20na%20Don%C3%A1tov%C4%9B%20Ml%C3%BDn%C4%9B."
         target="_blank"
         rel="noreferrer"
+        data-i18n="calendar"
       >přidat do kalendáře</a>
 
       <div class="wedding-info">
@@ -487,7 +539,7 @@
               <path d="M16 28s8-7.2 8-15a8 8 0 1 0-16 0c0 7.8 8 15 8 15z"></path>
               <circle cx="16" cy="13" r="3"></circle>
             </svg>
-            <span>Místo</span>
+            <span data-i18n="venueHeading">Místo</span>
           </h3>
           <div class="venue">
             <a
@@ -496,6 +548,7 @@
               target="_blank"
               rel="noreferrer"
               aria-label="Otevřít Donátův mlýn v Google Maps"
+              data-i18n-aria="mapsLabel"
             >
               <span class="venue-label">
                 <span class="venue-name">Donátův mlýn</span>
@@ -506,10 +559,10 @@
               </span>
             </a>
           </div>
-          <p>Besídka bude probíhat v Donátově mlýně na břehu řeky Želivky a přilehlé zahradě.</p>
-          <p>Nejlépe se k mlýnu dostanete autem. Mlýn je jen 5 minut od sjezdu z dálnice D1 a dojet můžete až přímo na místo.</p>
-          <p>Na mlýně proběhne úplně všechno – obřad, oběd, kapela, hry, raut i celý společný večer.</p>
-          <p>Pokud máte alergie, speciální dietu nebo jiné stravovací omezení, dejte nám prosím předem vědět.</p>
+          <p data-i18n="venueText1">Besídka bude probíhat v Donátově mlýně na břehu řeky Želivky a přilehlé zahradě.</p>
+          <p data-i18n="venueText2">Nejlépe se k mlýnu dostanete autem. Mlýn je jen 5 minut od sjezdu z dálnice D1 a dojet můžete až přímo na místo.</p>
+          <p data-i18n="venueText3">Na mlýně proběhne úplně všechno – obřad, oběd, kapela, hry, raut i celý společný večer.</p>
+          <p data-i18n="venueText4">Pokud máte alergie, speciální dietu nebo jiné stravovací omezení, dejte nám prosím předem vědět.</p>
         </section>
 
         <section class="info-section" aria-labelledby="schedule-heading">
@@ -518,10 +571,10 @@
               <circle cx="16" cy="17" r="10"></circle>
               <path d="M16 11v6l4 2.5M12 4h8M16 4v3"></path>
             </svg>
-            <span>Kdy dorazit</span>
+            <span data-i18n="arrivalHeading">Kdy dorazit</span>
           </h3>
-          <p>Rádi vás přivítáme od <strong>10:00</strong> s welcome drinkem, koláčky a humorem.</p>
-          <p>Obřad poté vypukne v <strong>11:30</strong>.</p>
+          <p data-i18n-html="arrivalText1">Rádi vás přivítáme od <strong>10:00</strong> s welcome drinkem, koláčky a humorem.</p>
+          <p data-i18n-html="arrivalText2">Obřad poté vypukne v <strong>11:30</strong>.</p>
         </section>
 
         <section class="info-section" aria-labelledby="dress-code-heading">
@@ -530,10 +583,10 @@
               <path d="M12 6c0 2.2 1.8 4 4 4s4-1.8 4-4"></path>
               <path d="M12 8 7 11l3 6 2-1v11h8V16l2 1 3-6-5-3M16 10v17"></path>
             </svg>
-            <span>Dress code</span>
+            <span data-i18n="dressHeading">Dress code</span>
           </h3>
-          <p>Oblečte se slavnostně, ale pohodlně.</p>
-          <p>Bude hrát kapela a část svatby se odehraje na zahradě, tak obujte něco,</br>v čem zvládnete trávu i taneční parket.</p>
+          <p data-i18n="dressText1">Oblečte se slavnostně, ale pohodlně.</p>
+          <p data-i18n-html="dressText2">Bude hrát kapela a část svatby se odehraje na zahradě, tak obujte něco,</br>v čem zvládnete trávu i taneční parket.</p>
         </section>
 
         <section class="info-section" aria-labelledby="gifts-heading">
@@ -542,10 +595,10 @@
               <path d="M5 13h22v14H5zM4 9h24v5H4zM16 9v18"></path>
               <path d="M16 9c-1-4.5-7-5.5-7-1.8C9 10 13 10 16 9zm0 0c1-4.5 7-5.5 7-1.8C23 10 19 10 16 9z"></path>
             </svg>
-            <span>Dary</span>
+            <span data-i18n="giftsHeading">Dary</span>
           </h3>
-          <p>Jantarovou komnatu neodmítneme!</p>
-          <p>Budeme však rádi za jakýkoliv finanční příspěvek do společného života.</p>
+          <p data-i18n="giftsText1">Jantarovou komnatu neodmítneme!</p>
+          <p data-i18n="giftsText2">Budeme však rádi za jakýkoliv finanční příspěvek do společného života.</p>
         </section>
 
         <section class="info-section" aria-labelledby="children-heading">
@@ -557,14 +610,14 @@
               <ellipse cx="18.5" cy="10.5" rx="2.5" ry="3.5" transform="rotate(8 18.5 10.5)"></ellipse>
               <ellipse cx="23.5" cy="16" rx="2.5" ry="3.5" transform="rotate(28 23.5 16)"></ellipse>
             </svg>
-            <span>Tentokrát bez dětí (a domácích mazlíčků)</span>
+            <span data-i18n="childrenHeading">Tentokrát bez dětí (a domácích mazlíčků)</span>
           </h3>
-          <p>Rozhodli jsme se pro svatbu bez dětí, aby si ji všichni – včetně čerstvých rodičů – mohli užít naplno a protančit střevíce. Doufáme, že vám vaši nejbližší s hlídáním pomůžou, ať si s námi můžete užít besídku až do večera/rána.</p>
-          <p>Zároveň s ohledem na pravidla mlýna prosíme, abyste dorazili i bez vašich zvířecích parťáků.</p>
+          <p data-i18n="childrenText1">Rozhodli jsme se pro svatbu bez dětí, aby si ji všichni – včetně čerstvých rodičů – mohli užít naplno a protančit střevíce. Doufáme, že vám vaši nejbližší s hlídáním pomůžou, ať si s námi můžete užít besídku až do večera/rána.</p>
+          <p data-i18n="childrenText2">Zároveň s ohledem na pravidla mlýna prosíme, abyste dorazili i bez vašich zvířecích parťáků.</p>
         </section>
 
         <section class="info-section" aria-labelledby="closing-heading">
-          <h3 id="closing-heading">Těšíme se na vás všechny!</h3>
+          <h3 id="closing-heading" data-i18n="closing">Těšíme se na vás všechny!</h3>
         </section>
 
       </div>
@@ -575,6 +628,77 @@
     const backgrounds = document.querySelectorAll(".hero-bg");
     const music = document.getElementById("site-music");
     const musicToggle = document.querySelector(".music-toggle");
+    const languageSwitcher = document.querySelector(".language-switcher");
+    const languageButtons = document.querySelectorAll("[data-language]");
+    let currentLanguage = "cs";
+    const translations = {
+      cs: {
+        pageTitle: "Naše besídka",
+        languageLabel: "Výběr jazyka",
+        heroTopline: "Zveme vás na",
+        heroTitle: "naší besídku (svatbu)",
+        musicLabel: "Nalaďte se",
+        musicPlay: "Přehrát hudbu",
+        musicPause: "Pozastavit hudbu",
+        musicError: "Hudbu se nepodařilo přehrát",
+        moreInfo: "Posunout na další informace",
+        tagline: "(česky přijď nebo chcípneš)",
+        date: "19. září 2026",
+        calendar: "přidat do kalendáře",
+        venueHeading: "Místo",
+        mapsLabel: "Otevřít Donátův mlýn v Google Maps",
+        venueText1: "Besídka bude probíhat v Donátově mlýně na břehu řeky Želivky a přilehlé zahradě.",
+        venueText2: "Nejlépe se k mlýnu dostanete autem. Mlýn je jen 5 minut od sjezdu z dálnice D1 a dojet můžete až přímo na místo.",
+        venueText3: "Na mlýně proběhne úplně všechno – obřad, oběd, kapela, hry, raut i celý společný večer.",
+        venueText4: "Pokud máte alergie, speciální dietu nebo jiné stravovací omezení, dejte nám prosím předem vědět.",
+        arrivalHeading: "Kdy dorazit",
+        arrivalText1: "Rádi vás přivítáme od <strong>10:00</strong> s welcome drinkem, koláčky a humorem.",
+        arrivalText2: "Obřad poté vypukne v <strong>11:30</strong>.",
+        dressHeading: "Dress code",
+        dressText1: "Oblečte se slavnostně, ale pohodlně.",
+        dressText2: "Bude hrát kapela a část svatby se odehraje na zahradě, tak obujte něco,<br>v čem zvládnete trávu i taneční parket.",
+        giftsHeading: "Dary",
+        giftsText1: "Jantarovou komnatu neodmítneme!",
+        giftsText2: "Budeme však rádi za jakýkoliv finanční příspěvek do společného života.",
+        childrenHeading: "Tentokrát bez dětí (a domácích mazlíčků)",
+        childrenText1: "Rozhodli jsme se pro svatbu bez dětí, aby si ji všichni – včetně čerstvých rodičů – mohli užít naplno a protančit střevíce. Doufáme, že vám vaši nejbližší s hlídáním pomůžou, ať si s námi můžete užít besídku až do večera/rána.",
+        childrenText2: "Zároveň s ohledem na pravidla mlýna prosíme, abyste dorazili i bez vašich zvířecích parťáků.",
+        closing: "Těšíme se na vás všechny!"
+      },
+      en: {
+        pageTitle: "Our wedding get-together",
+        languageLabel: "Language selection",
+        heroTopline: "We welcome you to",
+        heroTitle: "our wedding get-together",
+        musicLabel: "Get in the mood",
+        musicPlay: "Play music",
+        musicPause: "Pause music",
+        musicError: "The music could not be played",
+        moreInfo: "Continue to more information",
+        tagline: "",
+        date: "19 September 2026",
+        calendar: "add to calendar",
+        venueHeading: "Venue",
+        mapsLabel: "Open Donátův mlýn in Google Maps",
+        venueText1: "The wedding get-together will take place at Donátův mlýn, on the banks of the Želivka River and in its adjoining garden.",
+        venueText2: "The easiest way to get there is by car. The mill is only 5 minutes from the D1 highway exit, and you can drive all the way to the venue.",
+        venueText3: "Everything will take place at the mill – the ceremony, lunch, live music, games, buffet and the entire evening celebration.",
+        venueText4: "If you have any allergies, special dietary requirements or other food restrictions, please let us know in advance.",
+        arrivalHeading: "When to arrive",
+        arrivalText1: "We look forward to welcoming you from <strong>10:00AM</strong> with a drink, little snacks and a good humour.",
+        arrivalText2: "The ceremony will begin at <strong>11:30AM</strong>.",
+        dressHeading: "Dress code",
+        dressText1: "Dress festively, but comfortably.",
+        dressText2: "There will be a live band and part of the wedding will take place in the garden, so choose shoes that can handle both the grass and the dance floor.",
+        giftsHeading: "Gifts",
+        giftsText1: "We certainly wouldn't turn down the Amber Room!",
+        giftsText2: "However, we will be grateful for any financial contribution towards our life together.",
+        childrenHeading: "An adults-only celebration",
+        childrenText1: "We have decided to have a child-free wedding so that everyone – including new parents – can enjoy it to the fullest and dance the night away. We hope your loved ones can help with babysitting so you can stay and enjoy the wedding get-together with us until late at night – or early in the morning.",
+        childrenText2: "",
+        closing: "We can't wait to see you all!"
+      }
+    };
     const imagePaths = [
       "pictures/pic3.png",
       "pictures/pic4.png",
@@ -597,6 +721,61 @@
 
     const orderedImages = [firstImage, ...remainingImages];
 
+    const updateMusicLabel = () => {
+      const stateKey = music.paused ? "musicPlay" : "musicPause";
+      musicToggle.setAttribute("aria-label", translations[currentLanguage][stateKey]);
+    };
+
+    const setLanguage = (language) => {
+      currentLanguage = language;
+      const copy = translations[language];
+
+      document.documentElement.lang = language;
+      document.title = copy.pageTitle;
+      languageSwitcher.setAttribute("aria-label", copy.languageLabel);
+
+      document.querySelectorAll("[data-i18n]").forEach((element) => {
+        const key = element.dataset.i18n;
+        element.textContent = copy[key];
+        element.hidden = key === "tagline" && !copy[key];
+      });
+
+      document.querySelectorAll("[data-i18n-html]").forEach((element) => {
+        element.innerHTML = copy[element.dataset.i18nHtml];
+      });
+
+      document.querySelectorAll("[data-i18n-aria]").forEach((element) => {
+        element.setAttribute("aria-label", copy[element.dataset.i18nAria]);
+      });
+
+      languageButtons.forEach((button) => {
+        button.setAttribute("aria-pressed", String(button.dataset.language === language));
+      });
+
+      updateMusicLabel();
+    };
+
+    languageButtons.forEach((button) => {
+      button.addEventListener("click", () => {
+        const language = button.dataset.language;
+        const url = new URL(window.location.href);
+
+        if (language === "en") {
+          url.searchParams.set("lang", "eng");
+        } else {
+          url.searchParams.delete("lang");
+        }
+
+        window.history.replaceState({}, "", url);
+        setLanguage(language);
+      });
+    });
+
+    const initialLanguage = new URLSearchParams(window.location.search).get("lang") === "eng"
+      ? "en"
+      : "cs";
+    setLanguage(initialLanguage);
+
     backgrounds.forEach((background, index) => {
       background.style.backgroundImage = `url('${orderedImages[index]}')`;
     });
@@ -607,9 +786,9 @@
           await music.play();
           musicToggle.classList.add("is-playing");
           musicToggle.setAttribute("aria-pressed", "true");
-          musicToggle.setAttribute("aria-label", "Pozastavit hudbu");
+          updateMusicLabel();
         } catch (error) {
-          musicToggle.setAttribute("aria-label", "Hudbu se nepodařilo přehrát");
+          musicToggle.setAttribute("aria-label", translations[currentLanguage].musicError);
         }
         return;
       }
@@ -617,13 +796,13 @@
       music.pause();
       musicToggle.classList.remove("is-playing");
       musicToggle.setAttribute("aria-pressed", "false");
-      musicToggle.setAttribute("aria-label", "Přehrát hudbu");
+      updateMusicLabel();
     });
 
     music.addEventListener("ended", () => {
       musicToggle.classList.remove("is-playing");
       musicToggle.setAttribute("aria-pressed", "false");
-      musicToggle.setAttribute("aria-label", "Přehrát hudbu");
+      updateMusicLabel();
     });
 
     setInterval(() => {
